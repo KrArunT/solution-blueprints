@@ -6,7 +6,7 @@ apiVersion: v2
 name: aimsb-talk-to-your-documents
 description: A RAG application blueprint to talk to your documents
 type: application
-version: 0.4.7
+version: 0.4.8
 
 maintainers:
   - name: AMD
@@ -14,7 +14,7 @@ maintainers:
 
 dependencies:
 - name: aimchart-llm
-  version: "0.2.1"
+  version: "0.2.2"
   repository: "oci://registry-1.docker.io/amdenterpriseai"
   alias: llm
 - name: aimchart-embedding

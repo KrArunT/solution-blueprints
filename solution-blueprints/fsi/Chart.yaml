@@ -6,13 +6,13 @@ apiVersion: v2
 name: aimsb-fsi
 description: Financial Stock Intelligence blueprint
 type: application
-version: 0.4.4
+version: 0.4.5
 maintainers:
 - name: AMD
   url: https://www.amd.com/
 dependencies:
 - name: aimchart-llm
-  version: 0.2.1
+  version: 0.2.2
   repository: oci://registry-1.docker.io/amdenterpriseai
   alias: llm
 annotations:
