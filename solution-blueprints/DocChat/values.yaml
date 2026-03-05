@@ -1,0 +1,196 @@
+# yaml-language-server: $schema=
+# Copyright © Advanced Micro Devices, Inc., or its affiliates.
+#
+# SPDX-License-Identifier: MIT
+
+metadata:
+  labels: {}
+
+image: "python:3.12"
+imagePullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 80
+
+# Environment variables for the talk-to-your-documents application.
+env_vars:
+  USE_OPENAI_COMPATIBLE_EMBEDDINGS: "true"
+  GEN_MODEL: "meta-llama/Llama-3.3-70B-Instruct"
+  MAX_RETRIES: "3"
+  INITIAL_DELAY: "1.0"
+  BACKOFF_FACTOR: "2.0"
+  CHUNK_SIZE: "1000"
+  CHUNK_OVERLAP: "200"
+  TOP_K_DOCS: "5"
+
+deployment:
+  ports:
+    http: 7860
+
+resources:
+  requests:
+    cpu: "1"
+    memory: "4Gi"
+  limits:
+    cpu: "1"
+    memory: "4Gi"
+
+storage:
+  ephemeral:
+    quantity: 20Gi
+    storageClassName: mlstorage
+  dshm:
+    sizeLimit: 32Gi
+
+startupProbe:
+  httpGet: { path: /health, port: http }
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  failureThreshold: 60
+livenessProbe:
+  httpGet: { path: /health, port: http }
+  periodSeconds: 10
+readinessProbe:
+  httpGet: { path: /health, port: http }
+  periodSeconds: 10
+
+kaiwo:
+  enabled: false
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: t2yd-qdrant.45.63.79.40.nip.io
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+gatewayRoute:
+  enabled: true
+  gateway:
+    name: https
+    namespace: kgateway-system
+  host: t2yd-qdrant.45.63.79.40.nip.io
+
+# -- Values passed to the `llm` Subchart (aimchart-llm) --
+
+llm:
+  gpus: 4
+  deploymentStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 100%
+      maxSurge: "0"
+  service:
+    enabled: true
+    type: ClusterIP
+  image: "amdenterpriseai/aim-meta-llama-llama-3-3-70b-instruct:0.8.5-preview"
+  model: "llama-3-3-70b-instruct"
+  env_vars:
+    AIM_ALLOW_GENERAL_PROFILE_FALLBACK: "true"
+    HF_TOKEN:
+      name: hf-token
+      key: hf-token
+  storage:
+    ephemeral:
+      storageClassName: ""
+      quantity: 512Gi
+  localModelCache:
+    enabled: false
+    hostPath: ""
+    mountPath: "/model-cache"
+    readOnly: false
+    cacheEnv:
+      enabled: true
+      hfHome: "/model-cache/hf"
+      transformersCache: "/model-cache/hf/transformers"
+      hfHubCache: "/model-cache/hf/hub"
+
+# -- Values passed to the `embedding` Subchart (aimchart-embedding) --
+
+embedding:
+  metadata:
+    labels: {}
+  image: "michaelf34/infinity:0.0.70-amd-gfx942"
+  model: "intfloat/multilingual-e5-large-instruct"
+  gpus: 1
+  resources:
+    requests: { cpu: "2", memory: "32Gi" }
+    limits: { cpu: "4", memory: "192Gi" }
+  storage:
+    ephemeral:
+      quantity: 20Gi
+    dshm:
+      sizeLimit: 16Gi
+  deployment:
+    ports:
+      http: 7997
+    command:
+      - infinity_emb
+    args:
+      - v1
+      - server
+
+# -- Values for the bundled Qdrant service --
+
+qdrant:
+  metadata:
+    labels: {}
+  image:
+    repository: "qdrant/qdrant"
+    tag: "v1.15.4"
+  resources:
+    requests: { cpu: "1", memory: "4Gi" }
+    limits: { cpu: "2", memory: "8Gi" }
+  deployment:
+    ports:
+      http: 6333
+  persistence:
+    enabled: true
+    size: 25Gi
+    storageClassName: mlstorage
+  existingService: ""
+  fallback:
+    enabled: false
+  gatewayRoute:
+    enabled: true
+    host: ""
+    gateway:
+      name: https
+      namespace: kgateway-system
+
+# -- Values for bundled MinIO object storage used to persist original documents --
+minio:
+  enabled: true
+  existingService: ""
+  image:
+    repository: "minio/minio"
+    tag: "RELEASE.2025-09-07T16-13-09Z"
+  service:
+    apiPort: 9000
+    consolePort: 9001
+  auth:
+    existingSecret: ""
+    accessKey: "minioadmin"
+    secretKey: "minioadmin123"
+  bucket: "rag-docs"
+  region: "us-east-1"
+  prefix: "rag"
+  persistence:
+    enabled: true
+    size: 25Gi
+    storageClassName: mlstorage
+  resources:
+    requests: { cpu: "200m", memory: "512Mi" }
+    limits: { cpu: "1", memory: "2Gi" }
+  gatewayRoute:
+    enabled: true
+    apiHost: ""
+    consoleHost: ""
+    gateway:
+      name: https
+      namespace: kgateway-system

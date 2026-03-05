@@ -1,0 +1,33 @@
+%% Talk to your documents: app + deployment architecture
+flowchart TD
+  user[User Browser]
+
+  subgraph ext[External Access]
+    host[t2yd-qdrant.45.63.79.40.nip.io]
+    gw[Gateway kgateway-system https TLS 443]
+    route[HTTPRoute: t2yd-qdrant-aimsb-talk-to-your-documents]
+  end
+
+  subgraph ns[t2yd-qdrant namespace]
+    svc[Service: t2yd-qdrant-aimsb-talk-to-your-documents:80]
+    app[Pod talk-to-your-documents app FastAPI Gradio]
+
+    embedSvc[Service: t2yd-qdrant-embedding:7997]
+    embedPod[Pod embedding Infinity]
+
+    llmSvc[Service: llm-t2yd-qdrant:80]
+    llmPod[Pod llm vLLM]
+
+    qSvc[Service: t2yd-qdrant-qdrant:6333]
+    qPod[Pod qdrant]
+    qPvc[PVC t2yd-qdrant-qdrant]
+  end
+
+  user -->|HTTPS| host --> gw --> route --> svc --> app
+  app -->|/embeddings| embedSvc --> embedPod
+  app -->|/v1/models + chat/completions| llmSvc --> llmPod
+  app -->|store/search vectors| qSvc --> qPod --> qPvc
+
+  app -->|init wait Qdrant readyz| qSvc
+  app -->|init wait Embedding models| embedSvc
+  app -->|init wait LLM v1 models| llmSvc
