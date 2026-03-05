@@ -1,5 +1,5 @@
 
-# Build Guide: Deploy “Chat with Your Documents” on AMD AIMs Platform (RAG + Qdrant + ONTAP FlexCache)
+# Build Guide: Deploy “Chat with Your Documents” on AMD Enterprise AI Platform (RAG + Qdrant + ONTAP FlexCache)
 
 ## Table of Contents
 
