@@ -1,13 +1,3 @@
-Below is a cleaned, organized, “sanitized” **Markdown build guide** you can paste into GitHub (or convert to DOCX via Pandoc later). It includes:
-
-* ✅ **Table of Contents**
-* ✅ Clear prerequisites + step-by-step flow
-* ✅ Safer wording + placeholders for secrets/IPs
-* ✅ **Consistent image sizing** + **proper captions**
-* ✅ A **RAG high-level architecture** (Mermaid)
-* ✅ A **FlexCache → Ingestion → Qdrant → RAG** pipeline infographic (Mermaid)
-
----
 
 # Build Guide: Deploy “Chat with Your Documents” on AMD AIMs Platform (RAG + Qdrant + ONTAP FlexCache)
 
@@ -44,29 +34,6 @@ This guide deploys a **Document Chat (RAG) application** on the **AMD AIMs platf
 ## Target Architecture
 
 ### RAG High-Level Architecture (Recommended)
-
-```mermaid
-flowchart LR
-  U[User / Browser] --> G[Ingress / Gateway (kgateway)]
-  G --> UI[Gradio UI / RAG App Service]
-
-  subgraph K8S[AMD AIMs Kubernetes Cluster]
-    UI --> ORCH[RAG Orchestrator]
-    ORCH --> E[Embedding Service (Infinity)]
-    ORCH --> Q[(Qdrant Vector DB)]
-    ORCH --> LLM[AIM LLM Inference Service\n(llama-3.3-70b-instruct)]
-  end
-
-  subgraph STORAGE[External / Data Layer]
-    FC[ONTAP FlexCache Mount\n(pre-populated docs)] --> SYNC[rsync to staging\n+ copy into Pod]
-  end
-
-  SYNC --> ORCH
-  E --> Q
-  Q --> ORCH
-  LLM --> ORCH
-  ORCH --> UI
-```
 
 ---
 
@@ -132,25 +99,6 @@ sequenceDiagram
 * Use a dedicated staging directory (e.g., `/tmp/flexcache-sync`)
 * Ensure predictable file types (PDF, TXT, MD, DOCX) per your ingestion pipeline
 
-### Replace/Update the Existing Image (Make it RAG-Relevant)
-
-Use the infographic below instead of the older generic image.
-
-**Figure 1 — FlexCache → Staging → Pod → Qdrant Indexing Pipeline**
-
-```mermaid
-flowchart LR
-  A[ONTAP FlexCache Mount\n/mnt/Flexcache_Site2] --> B[rsync to staging\n/tmp/flexcache-sync]
-  B --> C[Copy into RAG Pod\n/app/data or /data]
-  C --> D[Chunking + Metadata]
-  D --> E[Embeddings\nmultilingual-e5-large-instruct]
-  E --> F[(Qdrant Collections)]
-  F --> G[RAG Retrieval at Query Time]
-```
-
-> If you still want to keep your screenshot image, place it right under Figure 1 as “Reference Screenshot”.
-
----
 
 ## Step 2 — Deploy Qdrant with Docker
 
@@ -470,7 +418,4 @@ You now have a working **RAG-based “Chat with Your Documents”** deployment o
 * **Qdrant** for vector search
 * **Embedding + LLM inference services** for retrieval-augmented answering
 
----
-
-If you want, I can also convert this cleaned guide into a **proper DOCX Word document** (with consistent heading styles + automatic TOC + image captions), but the Markdown version above is already GitHub-ready.
 
