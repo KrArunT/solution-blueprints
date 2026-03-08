@@ -1,0 +1,8 @@
+annotations:
+  org.opencontainers.image.revision: 1ce39df
+  org.opencontainers.image.source: https://github.com/amd-enterprise-ai/solution-blueprints/tree/1ce39df/aimcharts/aimchart-llm
+apiVersion: v2
+description: AIM LLM Deployed on Kubernetes
+name: aimchart-llm
+type: application
+version: 0.2.2

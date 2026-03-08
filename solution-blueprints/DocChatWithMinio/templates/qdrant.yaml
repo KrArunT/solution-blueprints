@@ -1,0 +1,101 @@
+# Copyright © Advanced Micro Devices, Inc., or its affiliates.
+#
+# SPDX-License-Identifier: MIT
+
+{{- if or (not .Values.qdrant.existingService) .Values.qdrant.fallback.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "aim-qdrant.release.fullname" . }}
+  labels:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- with .Values.qdrant.metadata.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: {{ .Values.qdrant.deployment.ports.http }}
+      targetPort: http
+  selector:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/instance: {{ .Release.Name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "aim-qdrant.release.fullname" . }}
+  labels:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- with .Values.qdrant.metadata.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qdrant
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: qdrant
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: qdrant
+          image: "{{ .Values.qdrant.image.repository }}:{{ .Values.qdrant.image.tag }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.qdrant.deployment.ports.http }}
+          resources:
+            {{- toYaml .Values.qdrant.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          {{- if .Values.qdrant.persistence.enabled }}
+          volumeMounts:
+            - mountPath: /qdrant/storage
+              name: qdrant-storage
+          {{- end }}
+      {{- if .Values.qdrant.persistence.enabled }}
+      volumes:
+        - name: qdrant-storage
+          persistentVolumeClaim:
+            claimName: {{ include "aim-qdrant.release.fullname" . }}
+      {{- end }}
+---
+{{- if .Values.qdrant.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "aim-qdrant.release.fullname" . }}
+  labels:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- with .Values.qdrant.metadata.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.qdrant.persistence.size }}
+  {{- if .Values.qdrant.persistence.storageClassName }}
+  storageClassName: {{ .Values.qdrant.persistence.storageClassName }}
+  {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,58 @@
+# Copyright © Advanced Micro Devices, Inc., or its affiliates.
+#
+# SPDX-License-Identifier: MIT
+
+{{ if and .Values.minio.enabled .Values.minio.gatewayRoute.enabled }}
+{{ $hostSuffix := regexReplaceAll "^[^.]+\\." .Values.gatewayRoute.host "" -}}
+{{ $apiHost := .Values.minio.gatewayRoute.apiHost | default (printf "%s-minio-api.%s" .Release.Name $hostSuffix) -}}
+{{ $consoleHost := .Values.minio.gatewayRoute.consoleHost | default (printf "%s-minio-console.%s" .Release.Name $hostSuffix) -}}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "aim-minio.release.fullname" . }}-api
+  labels:
+    {{- include "aimsb-talk-to-your-documents.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.minio.gatewayRoute.gateway.name }}
+      namespace: {{ .Values.minio.gatewayRoute.gateway.namespace }}
+  hostnames:
+    - {{ $apiHost | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: {{ include "aim-minio.release.fullname" . }}
+          port: {{ .Values.minio.service.apiPort }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "aim-minio.release.fullname" . }}-console
+  labels:
+    {{- include "aimsb-talk-to-your-documents.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.minio.gatewayRoute.gateway.name }}
+      namespace: {{ .Values.minio.gatewayRoute.gateway.namespace }}
+  hostnames:
+    - {{ $consoleHost | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - group: ""
+          kind: Service
+          name: {{ include "aim-minio.release.fullname" . }}
+          port: {{ .Values.minio.service.consolePort }}
+{{ end }}
