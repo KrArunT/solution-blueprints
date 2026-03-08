@@ -79,7 +79,7 @@ gatewayRoute:
 # -- Values passed to the `llm` Subchart (aimchart-llm) --
 
 llm:
-  gpus: 4
+  gpus: 2
   deploymentStrategy:
     type: RollingUpdate
     rollingUpdate:
