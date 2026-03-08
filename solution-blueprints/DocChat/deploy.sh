@@ -8,7 +8,7 @@ NAMESPACE="my-namespace"
 QDRANT_URL="http://45.63.92.22:6333/"
 FLEX_TARGET="flex"
 FLEX_DOCS_PATH=""
-LOCAL_STAGE_DIR="/tmp/rag-bootstrap-docs"
+LOCAL_STAGE_DIR="$HOME/workspace/verify/solution-blueprints/solution-blueprints/DocChat/Docs"
 VALUES_FILE="values.yaml"
 MODEL_CACHE_PATH=""
 SKIP_DEPENDENCY_UPDATE="false"
@@ -465,7 +465,7 @@ Deployment completed.
   Flex Docs Source:  ${FLEX_TARGET}:${FLEX_DOCS_PATH}
   Local Stage Dir:   $DOC_STAGE_RUN
   Indexed Files:     $DOC_COUNT
-  MinIO Sync:        ${MINIO_TARGET:-disabled}
+  #MinIO Sync:        ${MINIO_TARGET:-disabled}
 EOF
 }
 

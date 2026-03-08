@@ -1,0 +1,15 @@
+# Exclude local artifacts and non-chart assets from Helm package payload
+.git/
+.github/
+.idea/
+.vscode/
+*.swp
+*.tmp
+
+# Local staging and docs content can grow large and break API object limits
+Docs/
+~/
+
+# Developer docs not required by chart install
+BUILD-GUIDE.md
+docs/

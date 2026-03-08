@@ -1,0 +1,18 @@
+# Local environment
+.env
+
+# Local runtime/cache artifacts
+Docs/
+~/
+tmp/
+*.log
+*.tmp
+*.swp
+
+# Editor/project files
+.vscode/
+.idea/
+
+# Python caches
+__pycache__/
+*.pyc
