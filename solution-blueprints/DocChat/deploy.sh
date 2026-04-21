@@ -9,7 +9,7 @@ Usage:
 
 Example:
   ./deploy.sh \\
-    --flex-docs-path /mnt/<FlexcacheMountPpoint> \\
+    --flex-docs-path /mnt/<FlexcacheMountPoint> \\
     --gateway-host my-rag-app.<AIMS_PUBLIC_IP>.nip.io \\
     --qdrant-url http://<QDRANT_HOST>:6333
 
